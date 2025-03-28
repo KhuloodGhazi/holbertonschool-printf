@@ -5,9 +5,9 @@
 #include <unistd.h>
 
 int _printf(const char *format, ...);
-int _putchar(char c);
+int handle_specifier(char specifier, va_list args);
 int print_char(char c);
 int print_string(char *str);
-int print_percent(void);
+int print_number(int n);
 
 #endif /* MAIN_H */
