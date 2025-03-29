@@ -2,103 +2,132 @@
 #include <unistd.h>
 
 /**
+ * print_char - Writes a single character to stdout.
+ * @c: The character to write.
+ *
+ * Return: 1 on success, -1 on error.
+ */
+int print_char(char c)
+{
+	if (write(1, &c, 1) != 1)
+		return (-1);
+	return (1);
+}
+
+/**
+ * print_string - Writes a string to stdout.
+ * @s: The string to write.
+ *
+ * Return: Number of characters printed, or -1 on error.
+ */
+int print_string(char *s)
+{
+	int count = 0;
+
+	if (s == NULL)
+		s = "(null)";
+	while (*s)
+	{
+		if (write(1, s, 1) != 1)
+			return (-1);
+		count++;
+		s++;
+	}
+	return (count);
+}
+
+/**
+ * handle_specifier - Processes format specifiers for _printf.
+ * @spec: The specifier character.
+ * @args: The list of arguments.
+ * @printed_chars: Pointer to total printed count.
+ *
+ * Return: 0 on success, -1 on error.
+ */
+int handle_specifier(char spec, va_list args, int *printed_chars)
+{
+	int temp;
+
+	if (spec == 'c')
+	{
+		temp = print_char((char)va_arg(args, int));
+		if (temp == -1)
+			return (-1);
+		*printed_chars += temp;
+	}
+	else if (spec == 's')
+	{
+		temp = print_string(va_arg(args, char *));
+		if (temp == -1)
+			return (-1);
+		*printed_chars += temp;
+	}
+	else if (spec == '%')
+	{
+		temp = print_char('%');
+		if (temp == -1)
+			return (-1);
+		*printed_chars += temp;
+	}
+	else
+	{
+		temp = print_char('%');
+		if (temp == -1)
+			return (-1);
+		*printed_chars += temp;
+		temp = print_char(spec);
+		if (temp == -1)
+			return (-1);
+		*printed_chars += temp;
+	}
+	return (0);
+}
+
+/**
  * _printf - Produces output according to a format.
- * @format: A string that contains the text to be written and the
- *          conversion specifiers.
+ * @format: A string with text and conversion specifiers.
  *
- * Description: This function prints formatted output to stdout.
- * It supports the conversion specifiers: %c, %s, and %%.
- * Unsupported specifiers are printed as if the percent sign is literal.
- * If format is NULL or a lone '%' is encountered at the end,
- * the function returns -1.
+ * Description: Supports %c, %s, and %%.
+ * Unsupported specifiers print the percent sign and the specifier.
+ * Returns -1 if format is NULL or a lone '%' appears at the end.
  *
- * Return: The number of characters printed (excluding the null byte)
- *         on success, or -1 on error.
+ * Return: Number of characters printed, or -1 on error.
  */
 int _printf(const char *format, ...)
 {
-    va_list args;
-    int i, printed_chars;
-    char ch;
-    char *str;
+	va_list args;
+	int i, printed_chars = 0;
 
-    if (format == NULL)
-        return (-1);
-
-    va_start(args, format);
-    printed_chars = 0;
-    for (i = 0; format[i] != '\0'; i++)
-    {
-        if (format[i] == '%')
-        {
-            i++;
-            if (format[i] == '\0')
-            {
-                va_end(args);
-                return (-1);
-            }
-            if (format[i] == 'c')
-            {
-                ch = (char)va_arg(args, int);
-                if (write(1, &ch, 1) != 1)
-                {
-                    va_end(args);
-                    return (-1);
-                }
-                printed_chars++;
-            }
-            else if (format[i] == 's')
-            {
-                str = va_arg(args, char *);
-                if (str == NULL)
-                    str = "(null)";
-                while (*str)
-                {
-                    if (write(1, str, 1) != 1)
-                    {
-                        va_end(args);
-                        return (-1);
-                    }
-                    printed_chars++;
-                    str++;
-                }
-            }
-            else if (format[i] == '%')
-            {
-                if (write(1, "%", 1) != 1)
-                {
-                    va_end(args);
-                    return (-1);
-                }
-                printed_chars++;
-            }
-            else
-            {
-                /* Unsupported specifier: print the '%' and then the char */
-                if (write(1, "%", 1) != 1)
-                {
-                    va_end(args);
-                    return (-1);
-                }
-                printed_chars++;
-                if (write(1, &format[i], 1) != 1)
-                {
-                    va_end(args);
-                    return (-1);
-                }
-                printed_chars++;
-            }
-        }
-        else
-        {
-            if (write(1, &format[i], 1) != 1)
-            {
-                va_end(args);
-                return (-1);
-            }
-            printed_chars++;
-        }
-    }
-    va_end(args);
-    return (printed_chars);
+	if (format == NULL)
+		return (-1);
+	va_start(args, format);
+	for (i = 0; format[i] != '\0'; i++)
+	{
+		if (format[i] == '%')
+		{
+			i++;
+			if (format[i] == '\0')
+			{
+				va_end(args);
+				return (-1);
+			}
+			if (handle_specifier(format[i], args, &printed_chars) == -1)
+			{
+				va_end(args);
+				return (-1);
+			}
+		}
+		else
+		{
+			if (print_char(format[i]) == -1)
+			{
+				va_end(args);
+				return (-1);
+			}
+			printed_chars++;
+		}
+	}
+	va_end(args);
+	return (printed_chars);
 }
+
