@@ -1,45 +1,104 @@
-#include "main.h"
+#include <stdarg.h>
+#include <unistd.h>
 
 /**
  * _printf - Produces output according to a format.
- * @format: A character string composed of zero or more directives.
- * Return: The number of characters printed (excluding the null byte).
+ * @format: A string that contains the text to be written and the
+ *          conversion specifiers.
+ *
+ * Description: This function prints formatted output to stdout.
+ * It supports the conversion specifiers: %c, %s, and %%.
+ * Unsupported specifiers are printed as if the percent sign is literal.
+ * If format is NULL or a lone '%' is encountered at the end,
+ * the function returns -1.
+ *
+ * Return: The number of characters printed (excluding the null byte)
+ *         on success, or -1 on error.
  */
 int _printf(const char *format, ...)
 {
     va_list args;
-    int i = 0, count = 0;
+    int i, printed_chars;
+    char ch;
+    char *str;
 
-    if (!format)
-    {
-        return (-1); /* Correctly formatted return statement */
-    }
+    if (format == NULL)
+        return (-1);
 
     va_start(args, format);
-    while (format[i])
+    printed_chars = 0;
+    for (i = 0; format[i] != '\0'; i++)
     {
-        if (format[i] == '%' && format[i + 1])
+        if (format[i] == '%')
         {
             i++;
-            switch (format[i])
+            if (format[i] == '\0')
             {
-                case 'c':
-                    count += print_char(args);
-                    break;
-                default:
-                    write(1, &format[i - 1], 1);
-                    write(1, &format[i], 1);
-                    count += 2;
-                    break;
+                va_end(args);
+                return (-1);
+            }
+            if (format[i] == 'c')
+            {
+                ch = (char)va_arg(args, int);
+                if (write(1, &ch, 1) != 1)
+                {
+                    va_end(args);
+                    return (-1);
+                }
+                printed_chars++;
+            }
+            else if (format[i] == 's')
+            {
+                str = va_arg(args, char *);
+                if (str == NULL)
+                    str = "(null)";
+                while (*str)
+                {
+                    if (write(1, str, 1) != 1)
+                    {
+                        va_end(args);
+                        return (-1);
+                    }
+                    printed_chars++;
+                    str++;
+                }
+            }
+            else if (format[i] == '%')
+            {
+                if (write(1, "%", 1) != 1)
+                {
+                    va_end(args);
+                    return (-1);
+                }
+                printed_chars++;
+            }
+            else
+            {
+                /* Unsupported specifier: print the '%' and then the char */
+                if (write(1, "%", 1) != 1)
+                {
+                    va_end(args);
+                    return (-1);
+                }
+                printed_chars++;
+                if (write(1, &format[i], 1) != 1)
+                {
+                    va_end(args);
+                    return (-1);
+                }
+                printed_chars++;
             }
         }
         else
         {
-            write(1, &format[i], 1);
-            count++;
+            if (write(1, &format[i], 1) != 1)
+            {
+                va_end(args);
+                return (-1);
+            }
+            printed_chars++;
         }
-        i++;
     }
     va_end(args);
-    return (count);
+    return (printed_chars);
 }
