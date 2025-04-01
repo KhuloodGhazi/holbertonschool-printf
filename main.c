@@ -1,5 +1,6 @@
-#include "main.h"
+#include <stdio.h>
 #include <limits.h>
+#include "main.h"
 
 int main(void)
 {
@@ -20,6 +21,9 @@ int main(void)
     _printf("css%ccs%scscscs", 'T', "Test");
     _printf(str);
     _printf("man gcc:\n%s", str);
-
+    _printf("Hello, %s!\n", "World");
+    _printf("Character: %c\n", 'A');
+    _printf("Percent sign: %%\n");
+    
     return 0;
 }
