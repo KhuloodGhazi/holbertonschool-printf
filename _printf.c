@@ -1,13 +1,20 @@
 #include <stdarg.h>
 #include <unistd.h>
-#include <stdlib.h>
+#include <limits.h>
+
+/* Function declarations */
+int _putchar(char c);
+int print_string(const char *s);
+int print_number(int n);
+int handle_specifier(char spec, va_list args, int *printed_chars);
+int _printf(const char *format, ...);
 
 /**
- * _putchar - Writes a character to standard output.
- * @c: The character to print.
- *
- * Return: 1 on success, -1 on error.
- */
+* _putchar - Writes a character to standard output.
+* @c: The character to print.
+*
+* Return: 1 on success, -1 on error.
+*/
 int _putchar(char c)
 {
 if (write(1, &c, 1) != 1)
@@ -16,14 +23,15 @@ return (1);
 }
 
 /**
- * print_string - Prints a string to standard output.
- * @s: The string to print.
- *
- * Return: The number of characters printed.
- */
+* print_string - Prints a string to standard output.
+* @s: The string to print.
+*
+* Return: The number of characters printed.
+*/
 int print_string(const char *s)
 {
 int count = 0;
+
 while (*s)
 {
 if (_putchar(*s) != 1)
@@ -35,36 +43,47 @@ return (count);
 }
 
 /**
- * print_number - Converts an integer to string and prints it.
- * @n: The integer to print.
- *
- * Return: The number of characters printed.
- */
+* print_number - Converts an integer to string and prints it.
+* @n: The integer to print.
+*
+* Return: The number of characters printed.
+*/
 int print_number(int n)
 {
 int count = 0;
-if (n < 0)
+
+if (n == INT_MIN) /* Special case for INT_MIN */
 {
 count += _putchar('-');
-n = -n;
+count += _putchar('2');
+n = 147483648; /* Change to 2147483648 - 1 */
 }
+else if (n < 0)
+{
+count += _putchar('-');
+n = -n; /* Make n positive */
+}
+
+/* Recursively print each digit */
 if (n / 10)
 count += print_number(n / 10);
+
 count += _putchar(n % 10 + '0');
 return (count);
 }
 
 /**
- * handle_specifier - Processes format specifiers for _printf.
- * @spec: The specifier character.
- * @args: The list of arguments.
- * @printed_chars: Pointer to total printed count.
- *
- * Return: 0 on success, -1 on error.
- */
+* handle_specifier - Processes format specifiers for _printf.
+* @spec: The specifier character.
+* @args: The list of arguments.
+* @printed_chars: Pointer to total printed count.
+*
+* Return: 0 on success, -1 on error.
+*/
 int handle_specifier(char spec, va_list args, int *printed_chars)
 {
 int temp;
+
 if (spec == 'c') /* Handle character */
 {
 temp = _putchar((char)va_arg(args, int));
@@ -97,22 +116,25 @@ return (0);
 }
 
 /**
- * _printf - Produces output according to a format.
- * @format: A string with text and conversion specifiers.
- *
- * Description: Supports %c, %s, %d, %i, and %%.
- * Unsupported specifiers print the percent sign and the specifier.
- * Returns -1 if format is NULL or a lone '%' appears at the end.
- *
- * Return: Number of characters printed, or -1 on error.
- */
+* _printf - Produces output according to a format.
+* @format: A string with text and conversion specifiers.
+*
+* Description: Supports %c, %s, %d, %i, and %%.
+* Unsupported specifiers print the percent sign and the specifier.
+* Returns -1 if format is NULL or a lone '%' appears at the end.
+*
+* Return: Number of characters printed, or -1 on error.
+*/
 int _printf(const char *format, ...)
 {
 va_list args;
 int i, printed_chars = 0;
+
 if (format == NULL)
 return (-1);
+
 va_start(args, format);
+
 for (i = 0; format[i] != '\0'; i++)
 {
 if (format[i] == '%')
@@ -139,6 +161,7 @@ return (-1);
 printed_chars++;
 }
 }
+
 va_end(args);
 return (printed_chars);
 }
