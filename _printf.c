@@ -1,39 +1,57 @@
 #include <stdarg.h>
 #include <unistd.h>
+#include <stdlib.h>
 
 /**
- * print_char - Writes a single character to stdout.
- * @c: The character to write.
+ * _putchar - Writes a character to standard output.
+ * @c: The character to print.
  *
  * Return: 1 on success, -1 on error.
  */
-int print_char(char c)
+int _putchar(char c)
 {
-	if (write(1, &c, 1) != 1)
-		return (-1);
-	return (1);
+if (write(1, &c, 1) != 1)
+return (-1);
+return (1);
 }
 
 /**
- * print_string - Writes a string to stdout.
- * @s: The string to write.
+ * print_string - Prints a string to standard output.
+ * @s: The string to print.
  *
- * Return: Number of characters printed, or -1 on error.
+ * Return: The number of characters printed.
  */
-int print_string(char *s)
+int print_string(const char *s)
 {
-	int count = 0;
+int count = 0;
+while (*s)
+{
+if (_putchar(*s) != 1)
+return (-1);
+count++;
+s++;
+}
+return (count);
+}
 
-	if (s == NULL)
-		s = "(null)";
-	while (*s)
-	{
-		if (write(1, s, 1) != 1)
-			return (-1);
-		count++;
-		s++;
-	}
-	return (count);
+/**
+ * print_number - Converts an integer to string and prints it.
+ * @n: The integer to print.
+ *
+ * Return: The number of characters printed.
+ */
+int print_number(int n)
+{
+int count = 0;
+if (n < 0)
+{
+count += _putchar('-');
+n = -n;
+}
+if (n / 10)
+count += print_number(n / 10);
+count += _putchar(n % 10 + '0');
+return (count);
 }
 
 /**
@@ -46,48 +64,43 @@ int print_string(char *s)
  */
 int handle_specifier(char spec, va_list args, int *printed_chars)
 {
-	int temp;
-
-	if (spec == 'c')
-	{
-		temp = print_char((char)va_arg(args, int));
-		if (temp == -1)
-			return (-1);
-		*printed_chars += temp;
-	}
-	else if (spec == 's')
-	{
-		temp = print_string(va_arg(args, char *));
-		if (temp == -1)
-			return (-1);
-		*printed_chars += temp;
-	}
-	else if (spec == '%')
-	{
-		temp = print_char('%');
-		if (temp == -1)
-			return (-1);
-		*printed_chars += temp;
-	}
-	else
-	{
-		temp = print_char('%');
-		if (temp == -1)
-			return (-1);
-		*printed_chars += temp;
-		temp = print_char(spec);
-		if (temp == -1)
-			return (-1);
-		*printed_chars += temp;
-	}
-	return (0);
+int temp;
+if (spec == 'c') /* Handle character */
+{
+temp = _putchar((char)va_arg(args, int));
+if (temp == -1)
+return (-1);
+*printed_chars += temp;
+}
+else if (spec == 's') /* Handle string */
+{
+char *str = va_arg(args, char *);
+if (print_string(str) == -1)
+return (-1);
+*printed_chars += print_string(str);
+}
+else if (spec == '%') /* Handle percent sign */
+{
+*printed_chars += _putchar('%');
+}
+else if (spec == 'd' || spec == 'i') /* Handle integer */
+{
+int num = va_arg(args, int);
+*printed_chars += print_number(num);
+}
+else /* Handle unknown specifier */
+{
+*printed_chars += _putchar('%');
+*printed_chars += _putchar(spec);
+}
+return (0);
 }
 
 /**
  * _printf - Produces output according to a format.
  * @format: A string with text and conversion specifiers.
  *
- * Description: Supports %c, %s, and %%.
+ * Description: Supports %c, %s, %d, %i, and %%.
  * Unsupported specifiers print the percent sign and the specifier.
  * Returns -1 if format is NULL or a lone '%' appears at the end.
  *
@@ -95,39 +108,37 @@ int handle_specifier(char spec, va_list args, int *printed_chars)
  */
 int _printf(const char *format, ...)
 {
-	va_list args;
-	int i, printed_chars = 0;
-
-	if (format == NULL)
-		return (-1);
-	va_start(args, format);
-	for (i = 0; format[i] != '\0'; i++)
-	{
-		if (format[i] == '%')
-		{
-			i++;
-			if (format[i] == '\0')
-			{
-				va_end(args);
-				return (-1);
-			}
-			if (handle_specifier(format[i], args, &printed_chars) == -1)
-			{
-				va_end(args);
-				return (-1);
-			}
-		}
-		else
-		{
-			if (print_char(format[i]) == -1)
-			{
-				va_end(args);
-				return (-1);
-			}
-			printed_chars++;
-		}
-	}
-	va_end(args);
-	return (printed_chars);
+va_list args;
+int i, printed_chars = 0;
+if (format == NULL)
+return (-1);
+va_start(args, format);
+for (i = 0; format[i] != '\0'; i++)
+{
+if (format[i] == '%')
+{
+i++;
+if (format[i] == '\0')
+{
+va_end(args);
+return (-1);
 }
-
+if (handle_specifier(format[i], args, &printed_chars) == -1)
+{
+va_end(args);
+return (-1);
+}
+}
+else
+{
+if (_putchar(format[i]) == -1)
+{
+va_end(args);
+return (-1);
+}
+printed_chars++;
+}
+}
+va_end(args);
+return (printed_chars);
+}
